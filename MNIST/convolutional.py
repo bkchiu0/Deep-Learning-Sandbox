@@ -1,11 +1,11 @@
 import tensorflow as tf
-from tensorflow import keras
+from tensorflow.keras import datasets, layers, models
 import numpy as np
 import matplotlib.pyplot as plt
 
 from prediction_plotter import plot_image, plot_value_array
 
-data = keras.datasets.fashion_mnist
+data = datasets.fashion_mnist
 
 (train_images, train_labels), (test_images, test_labels) = data.load_data()
 
@@ -13,17 +13,24 @@ data = keras.datasets.fashion_mnist
 train_images = train_images / 255.0
 test_images = test_images / 255.0
 
-# Create a simple feed forward neural network
-model = keras.Sequential([
-    keras.layers.Flatten(input_shape=(28, 28)),
-    keras.layers.Dense(512, activation="relu"),
-    keras.layers.Dense(10, activation="softmax")
+# Add in
+model = models.Sequential([
+    layers.Reshape((28, 28, 1), input_shape=(28, 28)),
+    layers.Conv2D(128, (3, 3), activation='relu',
+                  input_shape=(28, 28, 1), use_bias=True),
+    layers.MaxPooling2D((2, 2)),
+    layers.Conv2D(128, (3, 3), activation='relu', use_bias=True),
+    layers.MaxPooling2D((2, 2)),
+    layers.Conv2D(128, (3, 3), activation='relu', use_bias=True),
+    layers.Flatten(),
+    layers.Dense(512, activation='relu'),
+    layers.Dense(10, activation='softmax')
 ])
+
+print(model.summary())
 
 model.compile(optimizer="adam", loss="sparse_categorical_crossentropy",
               metrics=['accuracy'])
-
-print(model.summary())
 
 model.fit(train_images, train_labels, epochs=10)
 
@@ -31,10 +38,8 @@ test_loss, test_acc = model.evaluate(test_images, test_labels, verbose=2)
 
 print('\nTest accuracy:', test_acc)
 
-# Code for visualizing predictions made by the model
+# Visualize predictions
 
-# Plot the first X test images, their predicted labels, and the true labels.
-# Color correct predictions in blue and incorrect predictions in red.
 predictions = model.predict(test_images)
 num_rows = 5
 num_cols = 5
